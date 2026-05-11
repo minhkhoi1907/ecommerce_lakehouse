@@ -1,7 +1,17 @@
 import requests
 import json
 import os
+import logging
 from dotenv import load_dotenv
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('pipeline.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
 
 os.makedirs("data/raw", exist_ok=True)
 
@@ -11,12 +21,12 @@ def fetch_exchange_rates():
     
     if api_key:
         url = f"https://v6.exchangerate-api.com/v6/{api_key}/latest/USD"
-        print("Using ExchangeRate-API with API Key...")
+        logging.info("Using ExchangeRate-API with API Key...")
     else:
         url = "https://open.er-api.com/v6/latest/USD"
-        print("No API Key found, using free fallback endpoint...")
+        logging.info("No API Key found, using free fallback endpoint...")
     
-    print(f"Fetching exchange rates from {url}...")
+    logging.info(f"Fetching exchange rates from {url}...")
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
@@ -36,7 +46,7 @@ def fetch_exchange_rates():
             }
         }
     except Exception as e:
-        print(f"Failed to fetch from API ({e}). Using mock data.")
+        logging.warning(f"Failed to fetch from API ({e}). Using mock data.")
         rates = {
             'base_code': 'USD',
             'date': 'Mock Date',
@@ -52,7 +62,7 @@ def fetch_exchange_rates():
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(rates, f, indent=4)
         
-    print(f"Exchange rates saved to {output_path}")
+    logging.info(f"Exchange rates saved to {output_path}")
 
 if __name__ == "__main__":
     fetch_exchange_rates()

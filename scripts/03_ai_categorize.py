@@ -1,15 +1,25 @@
 import pandas as pd
 import os
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('pipeline.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
 
 def categorize_products():
     input_path = 'data/raw/products.csv'
     output_path = 'data/raw/products_categorized.csv'
     
     if not os.path.exists(input_path):
-        print(f"Error: {input_path} not found. Run 01_generate_data.py first.")
+        logging.error(f"Error: {input_path} not found. Run 01_generate_data.py first.")
         return
         
-    print(f"Reading products from {input_path}...")
+    logging.info(f"Reading products from {input_path}...")
     df = pd.read_csv(input_path)
     
     # Rule-based categorization (giả lập AI categorization)
@@ -24,11 +34,11 @@ def categorize_products():
         else:
             return 'Other'
             
-    print("Applying AI (rule-based) categorization...")
+    logging.info("Applying AI (rule-based) categorization...")
     df['category'] = df['name'].apply(assign_category)
     
     df.to_csv(output_path, index=False)
-    print(f"Categorized products saved to {output_path}")
+    logging.info(f"Categorized products saved to {output_path}")
 
 if __name__ == "__main__":
     categorize_products()

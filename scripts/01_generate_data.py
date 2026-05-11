@@ -2,6 +2,17 @@ import pandas as pd
 import random
 from datetime import datetime, timedelta
 import os
+import logging
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('pipeline.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
 
 # Create data/raw if it doesn't exist
 os.makedirs("data/raw", exist_ok=True)
@@ -18,7 +29,7 @@ def generate_customers(n=100):
         })
     df = pd.DataFrame(customers)
     df.to_csv('data/raw/customers.csv', index=False)
-    print(f"Generated {n} customers.")
+    logging.info(f"Generated {n} customers.")
 
 def generate_products(n=50):
     products = []
@@ -31,7 +42,7 @@ def generate_products(n=50):
         })
     df = pd.DataFrame(products)
     df.to_csv('data/raw/products.csv', index=False)
-    print(f"Generated {n} products.")
+    logging.info(f"Generated {n} products.")
 
 def generate_orders(n=500, num_customers=100, num_products=50):
     orders = []
@@ -46,11 +57,11 @@ def generate_orders(n=500, num_customers=100, num_products=50):
         })
     df = pd.DataFrame(orders)
     df.to_csv('data/raw/orders.csv', index=False)
-    print(f"Generated {n} orders.")
+    logging.info(f"Generated {n} orders.")
 
 if __name__ == "__main__":
-    print("Starting data generation...")
+    logging.info("Starting data generation...")
     generate_customers()
     generate_products()
     generate_orders()
-    print("Data generation complete. Saved to data/raw/")
+    logging.info("Data generation complete. Saved to data/raw/")
