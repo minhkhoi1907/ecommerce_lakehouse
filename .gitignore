@@ -1,0 +1,11 @@
+# Môi trường
+.env
+.venv/
+env/
+__pycache__/
+
+# Dữ liệu & Database (không nên push dữ liệu thật hoặc db lên git)
+data/raw/*
+!data/raw/.gitkeep
+database/*
+!database/.gitkeep

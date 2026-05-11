@@ -58,11 +58,11 @@ Dưới đây là cấu trúc chính của dự án. File này được dùng đ
 - [x] **Giai đoạn 1: Khởi tạo & Môi trường**
   - [x] Tạo file `requirements.txt` với các thư viện: `pandas`, `requests`, `duckdb`, `dbt-duckdb`, `python-dotenv`.
   - [x] Khởi tạo cấu trúc thư mục (`data/raw`, `database`, `scripts`).
-- [ ] **Giai đoạn 2: Extract & Load (Python)**
-  - [ ] Viết script `01_generate_data.py` sinh dữ liệu CSV.
-  - [ ] Viết script `02_fetch_api.py` gọi API lấy tỷ giá.
-  - [ ] Viết script `03_ai_categorize.py` gắn mác sản phẩm bằng AI/Logic.
-  - [ ] Viết script `04_load_to_duckdb.py` đẩy dữ liệu vào `database/ecom.duckdb`.
+- [x] **Giai đoạn 2: Extract & Load (Python)**
+  - [x] Viết script `01_generate_data.py` sinh dữ liệu CSV.
+  - [x] Viết script `02_fetch_api.py` gọi API lấy tỷ giá.
+  - [x] Viết script `03_ai_categorize.py` gắn mác sản phẩm bằng AI/Logic.
+  - [x] Viết script `04_load_to_duckdb.py` đẩy dữ liệu vào `database/ecom.duckdb`.
 - [ ] **Giai đoạn 3: Transform (dbt)**
   - [ ] Thiết lập dbt project (`dbt_ecommerce`) và cấu hình `profiles.yml` trỏ đến `ecom.duckdb`.
   - [ ] Viết các model SQL cho lớp Bronze (Staging/Làm sạch).
