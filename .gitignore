@@ -12,3 +12,11 @@ data/raw/*
 !data/raw/.gitkeep
 database/*
 !database/.gitkeep
+
+# dbt generated files
+dbt_ecommerce/target/
+dbt_ecommerce/dbt_packages/
+dbt_ecommerce/logs/
+
+# Personal context files
+PROJECT_CONTEXT.md
