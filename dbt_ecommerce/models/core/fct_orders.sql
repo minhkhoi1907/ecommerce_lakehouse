@@ -25,4 +25,6 @@ SELECT
     (o.quantity * COALESCE(p.product_price_usd, 0) * COALESCE(r.rate, 1)) AS total_revenue_vnd
 FROM orders o
 LEFT JOIN products p ON o.product_id = p.product_id
-CROSS JOIN vnd_rate r
+CROSS JOIN (
+    SELECT COALESCE(MAX(rate), 1) AS rate FROM vnd_rate
+) r

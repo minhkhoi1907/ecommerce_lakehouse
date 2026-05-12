@@ -2,6 +2,7 @@ version: 2
 
 sources:
   - name: ecommerce
+    schema: main
     description: "Dữ liệu gốc (raw data) được load vào DuckDB từ Python scripts"
     tables:
       - name: raw_customers
