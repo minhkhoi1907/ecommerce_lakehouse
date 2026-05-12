@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: "Bảng Dimension lưu trữ thông tin khách hàng"
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+  
+  - name: dim_products
+    description: "Bảng Dimension lưu trữ thông tin sản phẩm và phân loại"
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+          
+  - name: fct_orders
+    description: "Bảng Fact lưu trữ chi tiết đơn hàng, kèm tính toán doanh thu bằng USD và VNĐ"
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+          # Kiểm tra Khóa ngoại (Foreign Key) xem khách hàng này có tồn tại trong bảng dim_customers không
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_id
+      - name: product_id
+        tests:
+          - not_null
+          # Kiểm tra Khóa ngoại xem sản phẩm này có tồn tại trong bảng dim_products không
+          - relationships:
+              to: ref('dim_products')
+              field: product_id

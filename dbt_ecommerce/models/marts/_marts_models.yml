@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: mart_sales_daily
+    description: "Daily aggregated sales reporting table"
+    columns:
+      - name: sale_date
+        description: "The date of the sales"
+        tests:
+          - not_null
+      - name: total_orders
+        description: "Total number of distinct orders placed on this day"
+      - name: total_items_sold
+        description: "Total number of items sold on this day"
+      - name: total_revenue_usd
+        description: "Total revenue generated in USD on this day"
+      - name: total_revenue_vnd
+        description: "Total revenue generated in VND on this day"
+
+  - name: mart_sales_by_category
+    description: "Sales aggregated by product category"
+    columns:
+      - name: product_category
+        description: "Category of the product"
+        tests:
+          - not_null
+      - name: total_orders
+        description: "Total number of distinct orders containing products from this category"
+      - name: total_items_sold
+        description: "Total number of items sold in this category"
+      - name: total_revenue_usd
+        description: "Total revenue generated in USD for this category"
+      - name: total_revenue_vnd
+        description: "Total revenue generated in VND for this category"

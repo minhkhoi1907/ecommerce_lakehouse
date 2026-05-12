@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: "Bảng dữ liệu khách hàng đã được làm sạch"
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_email
+        tests:
+          - not_null
+  
+  - name: stg_products
+    description: "Bảng dữ liệu sản phẩm đã được làm sạch"
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+      - name: product_price_usd
+        tests:
+          - not_null
+          
+  - name: stg_orders
+    description: "Bảng dữ liệu đơn hàng đã được ép kiểu ngày tháng"
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+      - name: product_id
+        tests:
+          - not_null
+          
+  - name: stg_exchange_rates
+    description: "Bảng dữ liệu tỷ giá quy đổi sang USD"
+    columns:
+      - name: currency
+        tests:
+          - unique
+          - not_null

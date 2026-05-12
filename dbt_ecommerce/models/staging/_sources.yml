@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: ecommerce
+    description: "Dữ liệu gốc (raw data) được load vào DuckDB từ Python scripts"
+    tables:
+      - name: raw_customers
+      - name: raw_orders
+      - name: raw_products
+      - name: raw_exchange_rates

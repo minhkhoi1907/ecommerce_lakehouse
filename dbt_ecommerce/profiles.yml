@@ -1,0 +1,8 @@
+ecommerce_lakehouse:
+  outputs:
+    dev:
+      type: duckdb
+      # Đường dẫn tương đối từ dbt_ecommerce lùi ra ngoài 1 cấp vào folder database
+      path: ../database/ecom.duckdb
+      threads: 4
+  target: dev
