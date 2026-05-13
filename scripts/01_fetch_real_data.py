@@ -33,19 +33,27 @@ def fetch_and_process_data():
     df = df[df['Quantity'] > 0]
     
     # 1. Process Customers
-    customers_df = df[['CustomerID', 'Country']].drop_duplicates(subset=['CustomerID']).copy()
-    customers_df['customer_id'] = 'C' + customers_df['CustomerID'].astype(int).astype(str).str.zfill(5)
-    customers_df['name'] = 'Customer ' + customers_df['CustomerID'].astype(int).astype(str)
-    customers_df['email'] = 'customer' + customers_df['CustomerID'].astype(int).astype(str) + '@example.com'
+    customers_df = df[['CustomerID', 'Country']].copy()
+    # Ensure CustomerID is integer then string
+    customers_df['CustomerID'] = customers_df['CustomerID'].astype(int)
+    # Deduplicate: Keep the last known country for a customer
+    customers_df = customers_df.drop_duplicates(subset=['CustomerID'], keep='last')
+    
+    customers_df['customer_id'] = 'C' + customers_df['CustomerID'].astype(str).str.zfill(5)
+    customers_df['name'] = 'Customer ' + customers_df['CustomerID'].astype(str)
+    customers_df['email'] = 'customer' + customers_df['CustomerID'].astype(str) + '@example.com'
     customers_df.rename(columns={'Country': 'country'}, inplace=True)
     customers_df = customers_df[['customer_id', 'name', 'email', 'country']]
     customers_df.to_parquet('data/raw/customers.parquet', index=False)
     logging.info(f"Generated {len(customers_df)} customers (Parquet).")
 
     # 2. Process Products
-    products_df = df[['StockCode', 'Description', 'UnitPrice']].drop_duplicates(subset=['StockCode']).copy()
-    # If Description is NaN, fill it
+    products_df = df[['StockCode', 'Description', 'UnitPrice']].copy()
+    # Fill missing descriptions
     products_df['Description'] = products_df['Description'].fillna("Unknown Product")
+    # Deduplicate: Keep the last price/description for a product
+    products_df = products_df.drop_duplicates(subset=['StockCode'], keep='last')
+    
     products_df.rename(columns={
         'StockCode': 'product_id',
         'Description': 'name',
@@ -56,13 +64,15 @@ def fetch_and_process_data():
 
     # 3. Process Orders
     orders_df = df[['InvoiceNo', 'CustomerID', 'StockCode', 'Quantity', 'InvoiceDate']].copy()
+    orders_df['CustomerID'] = orders_df['CustomerID'].astype(int)
+    
     orders_df.rename(columns={
         'InvoiceNo': 'order_id',
         'StockCode': 'product_id',
         'Quantity': 'quantity',
         'InvoiceDate': 'order_date'
     }, inplace=True)
-    orders_df['customer_id'] = 'C' + orders_df['CustomerID'].astype(int).astype(str).str.zfill(5)
+    orders_df['customer_id'] = 'C' + orders_df['CustomerID'].astype(str).str.zfill(5)
     orders_df.drop(columns=['CustomerID'], inplace=True)
     
     # Reorder columns to match previous output

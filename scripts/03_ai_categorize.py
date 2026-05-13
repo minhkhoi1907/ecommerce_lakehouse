@@ -24,6 +24,8 @@ def categorize_products():
     
     # Rule-based categorization
     def assign_category(name):
+        if pd.isna(name) or str(name).strip() == "":
+            return 'General Merchandise'
         name_lower = str(name).lower()
         if any(keyword in name_lower for keyword in ['bag', 'pouch', 'case', 'handbag']):
             return 'Bags & Accessories'

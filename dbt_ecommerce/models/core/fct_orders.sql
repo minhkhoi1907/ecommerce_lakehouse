@@ -14,7 +14,7 @@ WITH orders AS (
         quantity
     FROM {{ ref('stg_orders') }}
     {% if is_incremental() %}
-      WHERE order_created_at > (SELECT MAX(order_created_at) FROM {{ this }})
+      WHERE order_created_at >= (SELECT MAX(order_created_at) FROM {{ this }})
     {% endif %}
 ),
 products AS (
@@ -29,6 +29,12 @@ rates AS (
         rate_updated_at::DATE as rate_date
     FROM {{ ref('stg_exchange_rates') }}
     WHERE currency = 'VND'
+),
+latest_rate AS (
+    SELECT exchange_rate_to_usd 
+    FROM rates 
+    ORDER BY rate_date DESC 
+    LIMIT 1
 )
 
 SELECT
@@ -42,7 +48,7 @@ SELECT
     (o.quantity * COALESCE(p.product_price_usd, 0) * 
         COALESCE(
             r.exchange_rate_to_usd, 
-            (SELECT exchange_rate_to_usd FROM rates ORDER BY rate_date DESC LIMIT 1),
+            (SELECT exchange_rate_to_usd FROM latest_rate),
             25000
         )
     ) AS total_revenue_vnd

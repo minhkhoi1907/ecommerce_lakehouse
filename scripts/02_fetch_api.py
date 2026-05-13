@@ -2,7 +2,7 @@ import requests
 import json
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 logging.basicConfig(
@@ -38,7 +38,7 @@ def fetch_exchange_rates():
         
         rates = {
             'base_code': data.get('base_code', 'USD'),
-            'date': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+            'date': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
 
             'rates': {
                 'VND': rates_dict.get('VND', 25000),
@@ -51,7 +51,7 @@ def fetch_exchange_rates():
         logging.warning(f"Failed to fetch from API ({e}). Using mock data.")
         rates = {
             'base_code': 'USD',
-            'date': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+            'date': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
 
             'rates': {
                 'VND': 25400,

@@ -59,16 +59,14 @@ def load_to_bronze():
                 customer_id VARCHAR,
                 product_id VARCHAR,
                 quantity INTEGER,
-                order_date VARCHAR
+                order_date VARCHAR,
+                UNIQUE(order_id, product_id)
             );
         """)
+        # Using INSERT OR IGNORE to handle duplicates based on UNIQUE constraint
         con.execute(f"""
-            INSERT INTO raw_orders 
-            SELECT * FROM read_parquet('{order_path}') s
-            WHERE NOT EXISTS (
-                SELECT 1 FROM raw_orders t 
-                WHERE s.order_id = t.order_id AND s.product_id = t.product_id
-            );
+            INSERT OR IGNORE INTO raw_orders 
+            SELECT * FROM read_parquet('{order_path}');
         """)
         
     # --- 4. Load Exchange Rates (History Pattern) ---
@@ -97,7 +95,7 @@ def load_to_bronze():
             WHERE NOT EXISTS (
                 SELECT 1 FROM raw_exchange_rates t 
                 WHERE s.currency = t.currency 
-                AND date_trunc('hour', CAST(s.date AS TIMESTAMP)) = date_trunc('hour', t.rate_date)
+                AND date_trunc('day', CAST(s.date AS TIMESTAMP)) = date_trunc('day', t.rate_date)
             );
         """)
         

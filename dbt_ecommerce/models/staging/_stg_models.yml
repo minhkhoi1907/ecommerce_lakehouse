@@ -25,6 +25,11 @@ models:
           
   - name: stg_orders
     description: "Bảng dữ liệu đơn hàng đã được ép kiểu ngày tháng"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - order_id
+            - product_id
     columns:
       - name: order_id
         tests:
@@ -42,8 +47,12 @@ models:
           
   - name: stg_exchange_rates
     description: "Bảng dữ liệu tỷ giá quy đổi sang USD"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - currency
+            - rate_updated_at
     columns:
       - name: currency
         tests:
-          - unique
           - not_null

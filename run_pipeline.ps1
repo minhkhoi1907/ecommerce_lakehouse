@@ -18,6 +18,7 @@ if ($LASTEXITCODE -ne 0) { Write-Host "Lỗi ở bước 4" -ForegroundColor Red
 
 Write-Host "5. Chạy dbt để Transform dữ liệu (Silver & Gold Layers)..." -ForegroundColor Cyan
 cd dbt_ecommerce
+dbt deps
 dbt run
 if ($LASTEXITCODE -ne 0) { cd ..; Write-Host "Lỗi ở bước 5 (dbt run)" -ForegroundColor Red; exit $LASTEXITCODE }
 
