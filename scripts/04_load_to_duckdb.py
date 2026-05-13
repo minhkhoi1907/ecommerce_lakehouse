@@ -20,54 +20,95 @@ def load_to_bronze():
     logging.info(f"Connecting to DuckDB at {db_path}...")
     con = duckdb.connect(db_path)
     
-    # 1. Load Customers
-    if os.path.exists('data/raw/customers.csv'):
-        logging.info("Loading raw_customers incrementally...")
-        con.execute("CREATE TABLE IF NOT EXISTS raw_customers AS SELECT * FROM read_csv_auto('data/raw/customers.csv') LIMIT 0;")
-        con.execute("INSERT INTO raw_customers SELECT * FROM read_csv_auto('data/raw/customers.csv') WHERE customer_id NOT IN (SELECT customer_id FROM raw_customers);")
+    # --- 1. Load Customers (Parquet) ---
+    cust_path = 'data/raw/customers.parquet'
+    if os.path.exists(cust_path):
+        logging.info("Upserting raw_customers from Parquet...")
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS raw_customers (
+                customer_id VARCHAR PRIMARY KEY,
+                name VARCHAR,
+                email VARCHAR,
+                country VARCHAR
+            );
+        """)
+        # DuckDB can read parquet directly in the SQL
+        con.execute(f"INSERT OR REPLACE INTO raw_customers SELECT * FROM read_parquet('{cust_path}');")
     
-    # 2. Load Orders
-    if os.path.exists('data/raw/orders.csv'):
-        logging.info("Loading raw_orders incrementally...")
-        con.execute("CREATE TABLE IF NOT EXISTS raw_orders AS SELECT * FROM read_csv_auto('data/raw/orders.csv') LIMIT 0;")
-        con.execute("INSERT INTO raw_orders SELECT * FROM read_csv_auto('data/raw/orders.csv') WHERE order_id NOT IN (SELECT order_id FROM raw_orders);")
-        
-    # 3. Load Categorized Products
-    prod_path = 'data/raw/products_categorized.csv'
+    # --- 2. Load Products (Parquet) ---
+    prod_path = 'data/raw/products_categorized.parquet'
     if os.path.exists(prod_path):
-        logging.info("Loading raw_products (categorized) incrementally...")
-        con.execute(f"CREATE TABLE IF NOT EXISTS raw_products AS SELECT * FROM read_csv_auto('{prod_path}') LIMIT 0;")
-        con.execute(f"INSERT INTO raw_products SELECT * FROM read_csv_auto('{prod_path}') WHERE product_id NOT IN (SELECT product_id FROM raw_products);")
-    elif os.path.exists('data/raw/products.csv'):
-        logging.warning("products_categorized.csv not found! Falling back to raw products.csv and adding 'Unknown' category...")
-        con.execute("CREATE TABLE IF NOT EXISTS raw_products AS SELECT *, 'Unknown' AS category FROM read_csv_auto('data/raw/products.csv') LIMIT 0;")
-        con.execute("INSERT INTO raw_products SELECT *, 'Unknown' AS category FROM read_csv_auto('data/raw/products.csv') WHERE product_id NOT IN (SELECT product_id FROM raw_products);")
-    else:
-        logging.error("No product data found!")
+        logging.info("Upserting raw_products from Parquet...")
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS raw_products (
+                product_id VARCHAR PRIMARY KEY,
+                name VARCHAR,
+                price DOUBLE,
+                category VARCHAR
+            );
+        """)
+        con.execute(f"INSERT OR REPLACE INTO raw_products SELECT * FROM read_parquet('{prod_path}');")
+
+    # --- 3. Load Orders (Parquet with Deduplication) ---
+    order_path = 'data/raw/orders.parquet'
+    if os.path.exists(order_path):
+        logging.info("Loading raw_orders from Parquet with deduplication...")
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS raw_orders (
+                order_id VARCHAR,
+                customer_id VARCHAR,
+                product_id VARCHAR,
+                quantity INTEGER,
+                order_date VARCHAR
+            );
+        """)
+        con.execute(f"""
+            INSERT INTO raw_orders 
+            SELECT * FROM read_parquet('{order_path}') s
+            WHERE NOT EXISTS (
+                SELECT 1 FROM raw_orders t 
+                WHERE s.order_id = t.order_id AND s.product_id = t.product_id
+            );
+        """)
         
-    # 4. Load Exchange Rates (JSON)
+    # --- 4. Load Exchange Rates (History Pattern) ---
     if os.path.exists('data/raw/exchange_rates.json'):
-        logging.info("Loading raw_exchange_rates...")
+        logging.info("Loading raw_exchange_rates (History)...")
         with open('data/raw/exchange_rates.json', 'r') as f:
             rates_data = json.load(f)
             
-        # Convert JSON structure to a flat dataframe for easy loading
         rates_df = pd.DataFrame([
             {'currency': currency, 'rate': rate, 'date': rates_data['date']} 
             for currency, rate in rates_data['rates'].items()
         ])
         
-        con.execute("CREATE TABLE IF NOT EXISTS raw_exchange_rates AS SELECT * FROM rates_df LIMIT 0;")
-        con.execute("INSERT INTO raw_exchange_rates SELECT * FROM rates_df EXCEPT SELECT * FROM raw_exchange_rates;")
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS raw_exchange_rates (
+                currency VARCHAR,
+                rate DOUBLE,
+                rate_date TIMESTAMP
+            );
+        """)
         
-    logging.info("--- DuckDB Tables ---")
+        con.execute("""
+            INSERT INTO raw_exchange_rates 
+            SELECT currency, rate, CAST(date AS TIMESTAMP) 
+            FROM rates_df s
+            WHERE NOT EXISTS (
+                SELECT 1 FROM raw_exchange_rates t 
+                WHERE s.currency = t.currency 
+                AND date_trunc('hour', CAST(s.date AS TIMESTAMP)) = date_trunc('hour', t.rate_date)
+            );
+        """)
+        
+    logging.info("--- DuckDB Tables Summary ---")
     tables = con.execute("SHOW TABLES").fetchall()
     for table in tables:
         count = con.execute(f"SELECT COUNT(*) FROM {table[0]}").fetchone()[0]
         logging.info(f"Table: {table[0]} | Rows: {count}")
         
     con.close()
-    logging.info("All raw data loaded to DuckDB (Bronze Layer).")
+    logging.info("Parquet-based load process complete.")
 
 if __name__ == "__main__":
     load_to_bronze()

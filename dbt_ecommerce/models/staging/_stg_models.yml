@@ -28,7 +28,6 @@ models:
     columns:
       - name: order_id
         tests:
-          - unique
           - not_null
       - name: customer_id
         tests:
@@ -36,6 +35,10 @@ models:
       - name: product_id
         tests:
           - not_null
+      - name: quantity
+        tests:
+          - not_null
+
           
   - name: stg_exchange_rates
     description: "Bảng dữ liệu tỷ giá quy đổi sang USD"
